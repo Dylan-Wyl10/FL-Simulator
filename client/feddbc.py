@@ -2,6 +2,7 @@ import torch
 from .client import Client
 from utils import *
 from optimizer import *
+import numpy as np
 
 class fedavg(Client):
     def __init__(self, device, model_func, received_vecs, dataset, lr, args):
@@ -28,6 +29,11 @@ class fedavg(Client):
 
         last_state_params_list = get_mdl_params(self.model)
         # update parameter logic line 14-18
+        """
+        Start with modifying the algorithm in algorith
+        """
+        # 1. give bandwith, officially this is grabed randomly range 0-1
+        self.bandwith = np.random(0, 1)
         self.comm_vecs['local_update_list'] = last_state_params_list - self.received_vecs['Params_list']
         self.comm_vecs['local_model_param_list'] = last_state_params_list
 
