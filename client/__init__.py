@@ -9,3 +9,4 @@ from .mofedsam import mofedsam
 from .fedgamma import fedgamma
 from .fedspeed import fedspeed
 from .fedsmoo import fedsmoo
+from .feddbc import feddbc

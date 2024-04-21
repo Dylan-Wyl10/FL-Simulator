@@ -5,7 +5,7 @@ from optimizer import *
 from random import random
 
 
-class fedavg(Client):
+class feddbc(Client):
     def __init__(self, device, model_func, received_vecs, dataset, lr, args):
         super(fedavg, self).__init__(device, model_func, received_vecs, dataset, lr, args)
         self.trigger_low = torch.tensor(0)
