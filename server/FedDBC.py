@@ -7,6 +7,7 @@ import torch
 from client import *
 from .server import Server
 
+
 class FedDBC(Server):
     def __init__(self, device, model_func, init_model, init_par_list, datasets, method, args):
         super(FedAvg, self).__init__(device, model_func, init_model, init_par_list, datasets, method, args)
@@ -14,4 +15,11 @@ class FedDBC(Server):
         self.comm_vecs = {
             'Params_list': init_par_list.clone().detach(),
         }
-        self.Client =  feddbc
+        self.Client = feddbc
+
+
+    def process_for_communication(self):
+        pass
+
+    def global_update(self, selected_clients, Averaged_update, Averaged_model):
+        pass
