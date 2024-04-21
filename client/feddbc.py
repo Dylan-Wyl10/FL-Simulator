@@ -4,6 +4,7 @@ from utils import *
 from optimizer import *
 from random import random
 
+
 class fedavg(Client):
     def __init__(self, device, model_func, received_vecs, dataset, lr, args):
         super(fedavg, self).__init__(device, model_func, received_vecs, dataset, lr, args)
@@ -35,7 +36,7 @@ class fedavg(Client):
                     self.optimizer.step()
 
             last_state_params_list = get_mdl_params(self.model)
-            #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+            # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
             # update parameter logic line 14-18
             """
             Start with modifying the algorithm in algorithm line 10-18
@@ -51,7 +52,7 @@ class fedavg(Client):
             varphi = torch.norm((-delta + self.delta_head - self.error), p=2) - rho * torch.norm(delta, p=2)
             if varphi >= 0:
                 """20240421 YW: need to develop compress function later"""
-                self.delta_head = self.compress(self.error, delta, mode="scaled_sign")
+                self.delta_head = self.compress(self.error - delta, mode="scaled_sign")
                 self.comm_vecs['local_update_list'] = self.delta_head
                 # line15: transmit u to global server
             else:
@@ -59,13 +60,24 @@ class fedavg(Client):
                 self.delta_head = self.u
             # update local error, line 18
             self.error = self.error + delta - self.delta_head
-        ########$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#######################
+        ########$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#########
         else:
             self.error = self.error
-        #line 21, 22
-        self.trigger_low = self.trigger_low/(1 + self.trigger_low*torch.norm(self.error, p=2))
-        self.trigger_upper = (self.trigger_upper * torch.norm(self.error, p=2) + self.trigger_upper)/(1 + torch.norm(self.error, p=2))
+        # line 21, 22
+        self.trigger_low = self.trigger_low / (1 + self.trigger_low * torch.norm(self.error, p=2))
+        self.trigger_upper = (self.trigger_upper * torch.norm(self.error, p=2) + self.trigger_upper) / (
+                    1 + torch.norm(self.error, p=2))
 
         # self.comm_vecs['local_update_list'] = delta
-        self.comm_vecs['local_model_param_list'] = last_state_params_list  # not sure if this is needed.
+        # self.comm_vecs['local_model_param_list'] = last_state_params_list  # not sure if this is needed.
         return self.comm_vecs
+
+    @staticmethod
+    def compress(x, mode):
+        if mode == 'scaled_sign':
+            return (torch.norm(x, p=1) * torch.sign(x)) / x.shape[0]
+        elif mode == 'top_k':
+            # x_abs = torch.abs(x)
+            # _, indices = torch.sort(x_abs)
+            # x_mag = x[indices]  # vector x ordered by magnitude
+            return torch.topk(x, x.shape[0])
