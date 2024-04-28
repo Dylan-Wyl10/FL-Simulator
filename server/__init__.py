@@ -9,3 +9,4 @@ from .MoFedSAM import MoFedSAM
 from .FedGamma import FedGamma
 from .FedSpeed import FedSpeed
 from .FedSMOO import FedSMOO
+from .FedDBC import FedDBC

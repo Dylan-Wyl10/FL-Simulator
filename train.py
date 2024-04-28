@@ -50,7 +50,7 @@ parser.add_argument('--gamma', default=1.0, type=float)                         
 parser.add_argument('--epsilon', default=0.01, type=float)                                                 # select the minimal value for avoiding zero-division
 
 parser.add_argument('--method', choices=['FedAvg', 'FedCM', 'FedDyn', 'SCAFFOLD', 'FedAdam', 'FedProx', 'FedSAM', 'MoFedSAM', \
-                                         'FedGamma', 'FedSpeed', 'FedSMOO'], type=str, default='FedAvg')
+                                         'FedGamma', 'FedSpeed', 'FedSMOO', 'FedDBC'], type=str, default='FedAvg')
                                          
 args = parser.parse_args()
 print(args)
@@ -117,6 +117,8 @@ if __name__=='__main__':
         server_func = FedSpeed
     elif args.method == 'FedSMOO':
         server_func = FedSMOO
+    elif args.method == 'FedDBC':
+        server_func == FedDBC
     else:
         raise NotImplementedError('not implemented method yet')
     

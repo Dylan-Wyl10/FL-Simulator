@@ -173,7 +173,7 @@ class Server(object):
         np.save(divergence_file, self.divergence)
                 
     
-    def process_for_communication(self):
+    def process_for_communication(self, Averaged_update):
         pass
         
     
