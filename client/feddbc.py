@@ -53,14 +53,12 @@ class feddbc(Client):
                 """20240428 YW:use top-k compressor funcction"""
                 self.delta_head = self.topKcompress(self.error - delta, self.bandwith)
                 self.comm_vecs['local_update_list'] = self.delta_head
+                self.comm_vecs['local_model_param_list'] = last_state_params_list
                 # line15: transmit u to global server
             else:
                 """question for @Yixing: I am still wondering how u^{t}_{i} update.... ---  from Yilin 20240421"""
                 self.delta_head = self.u
             # update local error, line 18
-            print('#################################################')
-            print(self.error.shape, self.delta_head.shape)
-            print(self.error, delta, self.delta_head)
             self.error = self.error + delta - self.delta_head
         ########$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#########
         else:
