@@ -118,9 +118,11 @@ if __name__=='__main__':
     elif args.method == 'FedSMOO':
         server_func = FedSMOO
     elif args.method == 'FedDBC':
-        server_func == FedDBC
+        server_func = FedDBC
     else:
         raise NotImplementedError('not implemented method yet')
+
+    # print(server_func)
     
     _server = server_func(device=device, model_func=model_func, init_model=init_model, init_par_list=init_par_list,
                           datasets=data_obj, method=args.method, args=args)

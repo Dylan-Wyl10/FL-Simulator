@@ -46,7 +46,7 @@ class feddbc(Client):
             # line 11: give bandwith, officially this is grabed randomly range 0-1
             self.bandwith = torch.rand(1)
             # line 12:
-            rho = self.trigger_low + (self.trigger_upper - self.trigger_low) * torch.pow(-self.bandwith * torch.norm(delta))
+            rho = self.trigger_low + (self.trigger_upper - self.trigger_low) * torch.pow(torch.e, -self.bandwith * torch.norm(delta))
             # line 13: Calculate varphi = \varphi_i^r = \|-\Delta^t_i+\widehat{\Delta}_{i}^{t}-\mathbf{e}^t_i\|^2 -\rho_i^t\|\Delta^t_i\|^2, (eqution3)
             varphi = torch.norm((-delta + self.delta_head - self.error), p=2) - rho * torch.norm(delta, p=2)
             if varphi >= 0:
@@ -58,6 +58,9 @@ class feddbc(Client):
                 """question for @Yixing: I am still wondering how u^{t}_{i} update.... ---  from Yilin 20240421"""
                 self.delta_head = self.u
             # update local error, line 18
+            print('#################################################')
+            print(self.error.shape, self.delta_head.shape)
+            print(self.error, delta, self.delta_head)
             self.error = self.error + delta - self.delta_head
         ########$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#########
         else:
@@ -73,4 +76,8 @@ class feddbc(Client):
 
     @staticmethod
     def topKcompress(x, ratio):
-            return torch.topk(x, int(ratio*x.shape[0]))
+        res = torch.zeros(x.shape)  # create a zero tensor to save the results
+        tensor, indice = torch.topk(x, k=int(ratio*x.shape[0]), sorted=False)
+        for i in range(tensor.shape[0]):
+            res[indice[i]] = tensor[i]
+        return res

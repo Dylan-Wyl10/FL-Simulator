@@ -1,1 +1,1 @@
-python3 train.py --non-iid --dataset CIFAR10 --model ResNet18 --split-rule Dirichlet --split-coef 0.6 --active-ratio 0.1 --total-client 100 --method FedAvg
+python3 train.py --non-iid --dataset CIFAR10 --model ResNet18 --split-rule Dirichlet --split-coef 0.6 --active-ratio 0.1 --total-client 100 --method FedDBC
