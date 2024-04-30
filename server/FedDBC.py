@@ -7,6 +7,7 @@ import torch
 from client import *
 from .server import Server
 import time
+import json
 
 from utils import *
 
@@ -38,31 +39,45 @@ class FedDBC(Server):
 
         Averaged_update = torch.zeros(self.server_model_params_list.shape)
 
+        self.train_results = {
+            'active_client_list': [],
+            'clients_varphi_list': []
+        }
+
         for t in range(self.args.comm_rounds):
             # initial a bandwith
             bandwith = torch.rand(1)
             start = time.time()
             # select active clients list
             selected_clients = self._activate_clients_(t)
+
+            # for data collection
+            self.train_results['active_client_list'].append(selected_clients)
+            varphi_ls = []
             print('============= Communication Round', t + 1, '=============', flush=True)
             print('Selected Clients: %s' % (', '.join(['%2d' % item for item in selected_clients])))
-            print('Parameters: bandwith{}'.format(bandwith))
+
 
             for client in selected_clients:
                 dataset = (self.datasets.client_x[client], self.datasets.client_y[client])
                 self.process_for_communication(client, Averaged_update)
                 _edge_device = self.Client(device=self.device, model_func=self.model_func, received_vecs=self.comm_vecs,
                                            dataset=dataset, lr=self.lr, bandwith=bandwith, args=self.args)
-                self.received_vecs = _edge_device.train()
+
+                # update u
+                _edge_device.u = Averaged_update
+                self.received_vecs, varphi = _edge_device.train()
                 self.clients_updated_params_list[client] = self.received_vecs['local_update_list']
                 self.clients_params_list[client] = self.received_vecs['local_model_param_list']
-                print(self.clients_updated_params_list[client])
-                print(self.clients_params_list[client])
-                print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+
                 self.postprocess(client, self.received_vecs)
+
+                varphi_ls.append(varphi)
 
                 # release the salloc
                 del _edge_device
+
+            self.train_results['clients_varphi_list'].append(varphi_ls)
 
             # calculate averaged model
             Averaged_update = torch.mean(self.clients_updated_params_list[selected_clients], dim=0)
@@ -78,6 +93,9 @@ class FedDBC(Server):
             end = time.time()
             self.time[t] = end - start
             print("            ----    Time: {:.2f}s".format(self.time[t]), flush=True)
+
+        with open('result_parameter.json', 'w') as json_file:
+            json.dump(self.train_results, json_file)
 
         self._save_results_()
         self._summary_()

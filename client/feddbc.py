@@ -53,12 +53,14 @@ class feddbc(Client):
             if varphi >= 0:
                 """20240428 YW:use top-k compressor funcction"""
                 """20240429 YW:replace the removed component with zero"""
+                print('$$$$$$$$$$$$$$varphi value is {}, compress and use topk'.format(varphi))
                 self.delta_head = self.topKcompress(self.error - delta, self.bandwith)
                 self.comm_vecs['local_update_list'] = self.delta_head
                 self.comm_vecs['local_model_param_list'] = last_state_params_list
                 # line15: transmit u to global server
             else:
                 """question for @Yixing: I am still wondering how u^{t}_{i} update.... ---  from Yilin 20240421"""
+                print('$$$$$$$$$$$$$not compress and use u')
                 self.delta_head = self.u
             # update local error, line 18
             self.error = self.error + delta - self.delta_head
@@ -72,7 +74,7 @@ class feddbc(Client):
 
         # self.comm_vecs['local_update_list'] = delta
         # self.comm_vecs['local_model_param_list'] = last_state_params_list  # not sure if this is needed.
-        return self.comm_vecs
+        return self.comm_vecs, varphi
 
     @staticmethod
     def topKcompress(x, ratio):
