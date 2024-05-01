@@ -44,12 +44,13 @@ class feddbc(Client):
             """
             # this is delta^{t}_{i}, line 10
             delta = last_state_params_list - self.received_vecs['Params_list']
-            # line 11: give bandwith, officially this is grabed randomly range 0-1
+            # line 11: give bandwith, officially this is grabed randomly range 0-1, now grab from upper level
             # self.bandwith = torch.rand(1)
             # line 12:
             rho = self.trigger_low + (self.trigger_upper - self.trigger_low) * torch.pow(torch.e, -self.bandwith * torch.norm(delta))
             # line 13: Calculate varphi = \varphi_i^r = \|-\Delta^t_i+\widehat{\Delta}_{i}^{t}-\mathbf{e}^t_i\|^2 -\rho_i^t\|\Delta^t_i\|^2, (eqution3)
             varphi = torch.norm((-delta + self.delta_head - self.error), p=2) - rho * torch.norm(delta, p=2)
+            print('$$$$$$$rho is {}, varphi1 is {}, varphi2 is {}'.format(rho, torch.norm((-delta + self.delta_head - self.error), p=2) , rho * torch.norm(delta, p=2)))
             if varphi >= 0:
                 """20240428 YW:use top-k compressor funcction"""
                 """20240429 YW:replace the removed component with zero"""
