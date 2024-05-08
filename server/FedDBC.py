@@ -58,7 +58,7 @@ class FedDBC(Server):
             print('============= Communication Round', t + 1, '=============', flush=True)
             print('Selected Clients: %s' % (', '.join(['%2d' % item for item in selected_clients])))
 
-            selected_clients = [1]
+            # selected_clients = [1]
 
             for client in selected_clients:
                 print(
@@ -68,8 +68,9 @@ class FedDBC(Server):
                 self.process_for_communication(client, Averaged_update)
                 if client in self.client_ls.keys() and self.client_ls[client]:
                     _edge_device = self.client_ls[client]
+                    _edge_device.received_vecs = self.comm_vecs
                 else:
-                    _edge_device = self.Client(device=self.device, id=str(client), model=self.server_model,
+                    _edge_device = self.Client(device=self.device, id=str(client),
                                                model_func=self.model_func, received_vecs=self.comm_vecs,
                                                dataset=dataset, lr=self.lr, bandwith=bandwith, args=self.args)
 

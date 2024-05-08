@@ -6,10 +6,10 @@ from random import random
 
 
 class feddbc(Client):
-    def __init__(self, device, id, model, model_func, received_vecs, dataset, lr, bandwith, args):
-        super(feddbc, self).__init__(device, id, model, model_func, received_vecs, dataset, lr, bandwith, args)
-        self.trigger_low = torch.tensor(0)
-        self.trigger_upper = torch.tensor(1)
+    def __init__(self, device, id, model_func, received_vecs, dataset, lr, bandwith, args):
+        super(feddbc, self).__init__(device, id, model_func, received_vecs, dataset, lr, bandwith, args)
+        self.trigger_low = torch.tensor(0.3)
+        self.trigger_upper = torch.tensor(0.8)
         # self.delta_head = torch.tensor(0)
         self.delta_head = torch.zeros(get_mdl_params(self.model).shape)
         self.error = torch.zeros(get_mdl_params(self.model).shape)
@@ -49,30 +49,32 @@ class feddbc(Client):
             # self.bandwith = torch.rand(1)
             # line 12:
             rho = self.trigger_low + (self.trigger_upper - self.trigger_low) * torch.pow(torch.e, -self.bandwith * torch.norm(delta))
+            print('rho calculator: {}= {}+({}-{})*e^({}) '.format(rho, self.trigger_low, self.trigger_upper, self.trigger_low, -self.bandwith * torch.norm(delta)))
             # line 13: Calculate varphi = \varphi_i^r = \|-\Delta^t_i+\widehat{\Delta}_{i}^{t}-\mathbf{e}^t_i\|^2 -\rho_i^t\|\Delta^t_i\|^2, (eqution3)
             varphi = torch.norm((-delta + self.delta_head - self.error), p=2) - rho * torch.norm(delta, p=2)
             print('$$$$$$$rho is {}, varphi1 is {}, varphi2 is {}'.format(rho, torch.norm((-delta + self.delta_head - self.error), p=2) , rho * torch.norm(delta, p=2)))
             if varphi >= 0:
                 """20240428 YW:use top-k compressor funcction"""
                 """20240429 YW:replace the removed component with zero"""
-                print('$$$$$$$$$$$$$$varphi value is {}, compress and use topk'.format(varphi))
+                print('$$$$$$$$$$$$$$client {} varphi value is {}, compress and use topk'.format(self.id, varphi))
                 self.delta_head = self.topKcompress(self.error - delta, self.bandwith)
                 self.comm_vecs['local_update_list'] = self.delta_head
                 self.comm_vecs['local_model_param_list'] = last_state_params_list
                 # line15: transmit u to global server
             else:
                 """question for @Yixing: I am still wondering how u^{t}_{i} update.... ---  from Yilin 20240421"""
-                print('$$$$$$$$$$$$$not compress and use u')
+                print('$$$$$$$$$$$$$client {} not compress and use u'.format(self.id))
                 self.delta_head = self.u
             # update local error, line 18
             self.error = self.error + delta - self.delta_head
+            print('error norm2 is {}'.format(torch.norm(self.error, p=2)))
         ########$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#########
         else:
             self.error = self.error
         # line 21, 22
-        self.trigger_low = self.trigger_low / (1 + self.trigger_low * torch.norm(self.error, p=2))
-        self.trigger_upper = (self.trigger_upper * torch.norm(self.error, p=2) + self.trigger_upper) / (
-                    1 + torch.norm(self.error, p=2))
+        # self.trigger_low = self.trigger_low / (1 + self.trigger_low * torch.norm(self.error, p=2))
+        # self.trigger_upper = (self.trigger_upper * torch.norm(self.error, p=2) + self.trigger_upper) / (
+        #             1 + torch.norm(self.error, p=2))
 
         # self.comm_vecs['local_update_list'] = delta
         # self.comm_vecs['local_model_param_list'] = last_state_params_list  # not sure if this is needed.

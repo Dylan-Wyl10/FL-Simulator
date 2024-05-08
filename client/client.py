@@ -6,12 +6,12 @@ from torch.utils import data
 
 
 class Client():
-    def __init__(self, device, id, model, model_func, received_vecs, dataset, lr, bandwith, args):
+    def __init__(self, device, id, model_func, received_vecs, dataset, lr, bandwith, args):
         self.args = args
         self.device = device
         self.id = id
         self.model_func = model_func
-        self.model = model
+        # self.model = model
         self.received_vecs = received_vecs
         self.bandwith = bandwith
         self.comm_vecs = {
