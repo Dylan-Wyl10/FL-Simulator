@@ -43,6 +43,7 @@ class FedDBC(Server):
             'active_client_list': [],
             'clients_varphi_list': []
         }
+        self.client_ls = {}  # initial client dictionary to restore all Client Class.
 
         for t in range(self.args.comm_rounds):
             # initial a bandwith
@@ -57,12 +58,20 @@ class FedDBC(Server):
             print('============= Communication Round', t + 1, '=============', flush=True)
             print('Selected Clients: %s' % (', '.join(['%2d' % item for item in selected_clients])))
 
+            selected_clients = [1]
 
             for client in selected_clients:
+                print(
+                    '#################Communication Round {}, client {}, start to train##################'.format(t + 1,
+                                                                                                                  client))
                 dataset = (self.datasets.client_x[client], self.datasets.client_y[client])
                 self.process_for_communication(client, Averaged_update)
-                _edge_device = self.Client(device=self.device, model_func=self.model_func, received_vecs=self.comm_vecs,
-                                           dataset=dataset, lr=self.lr, bandwith=bandwith, args=self.args)
+                if client in self.client_ls.keys() and self.client_ls[client]:
+                    _edge_device = self.client_ls[client]
+                else:
+                    _edge_device = self.Client(device=self.device, id=str(client), model=self.server_model,
+                                               model_func=self.model_func, received_vecs=self.comm_vecs,
+                                               dataset=dataset, lr=self.lr, bandwith=bandwith, args=self.args)
 
                 # update u
                 _edge_device.u = Averaged_update
@@ -70,11 +79,15 @@ class FedDBC(Server):
                 self.clients_updated_params_list[client] = self.received_vecs['local_update_list']
                 self.clients_params_list[client] = self.received_vecs['local_model_param_list']
 
+                # aa = self.clients_updated_params_list[selected_clients]
+                print('the error is', _edge_device.error)
+
                 self.postprocess(client, self.received_vecs)
 
                 varphi_ls.append(varphi)
 
                 # release the salloc
+                self.client_ls[client] = _edge_device
                 del _edge_device
 
             self.train_results['clients_varphi_list'].append(varphi_ls)
@@ -99,4 +112,3 @@ class FedDBC(Server):
 
         self._save_results_()
         self._summary_()
-

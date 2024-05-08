@@ -6,15 +6,16 @@ from random import random
 
 
 class feddbc(Client):
-    def __init__(self, device, model_func, received_vecs, dataset, lr, bandwith, args):
-        super(feddbc, self).__init__(device, model_func, received_vecs, dataset, lr, args)
+    def __init__(self, device, id, model, model_func, received_vecs, dataset, lr, bandwith, args):
+        super(feddbc, self).__init__(device, id, model, model_func, received_vecs, dataset, lr, bandwith, args)
         self.trigger_low = torch.tensor(0)
         self.trigger_upper = torch.tensor(1)
-        self.delta_head = torch.tensor(0)
-        self.error = torch.tensor(0)
-        self.u = torch.tensor(0)
+        # self.delta_head = torch.tensor(0)
+        self.delta_head = torch.zeros(get_mdl_params(self.model).shape)
+        self.error = torch.zeros(get_mdl_params(self.model).shape)
+        self.u = torch.zeros(get_mdl_params(self.model).shape)
         self.isupdate = True
-        self.bandwith = bandwith
+        # self.bandwith = bandwith
 
     def train(self):
         if self.isupdate:

@@ -6,11 +6,14 @@ from torch.utils import data
 
 
 class Client():
-    def __init__(self, device, model_func, received_vecs, dataset, lr, args):
+    def __init__(self, device, id, model, model_func, received_vecs, dataset, lr, bandwith, args):
         self.args = args
         self.device = device
+        self.id = id
         self.model_func = model_func
+        self.model = model
         self.received_vecs = received_vecs
+        self.bandwith = bandwith
         self.comm_vecs = {
             'local_update_list': None,
             'local_model_param_list': None,
